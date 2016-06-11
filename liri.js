@@ -11,9 +11,9 @@ if (arguments == "my-tweets") {
 } else if  (arguments == "movie-this") {	
 	movie();
 } else if (arguments == "do-what-it-says") {
-	console.log('Hold please...')
+	doWhatItSays();
 } else {
-	console.log("I will not do that.");
+	console.log("Type in either my-tweets, spotify-this-song, movie-this, or do-what-it-says");
 }
 
 // Function for twitter
@@ -53,24 +53,36 @@ function tweets() {
 
  	 			// Break Between Tweets
  	 			console.log(" ");
+
+ 	 			var text = "Name: " + data[i].user.name + "\n" +
+			    		   "Screen Name: " + data[i].user.screen_name + "\n" +
+					       "Tweet Text: " + data[i].text + "\n" +
+					       "Date: " + month + "/" + day + "/" + year + "\n" +
+					       "===========================================" + "\n";
+
+				// Write text to a file
+				writeToText(text);
  	 		}
-    		//console.log(data);
   		}
 	});
 }
 
 // Function for Spotify
-function spotify() {
+function spotify(song) {
 
 	// require spotify
 	var spotify = require('spotify');
 
-	// Get the song name from the command line
-	var song = process.argv[3];
-
-	// If the song name is null the default is Blink 182's song: "what's my age again"
 	if (song === undefined || song === null) {
-		song = "what's my age again";
+
+		// Get the song name from the command line
+		var song = process.argv[3];
+
+		// If the song name is null the default is Blink 182's song: "what's my age again"
+		if (song === undefined || song === null) {
+			song = "what's my age again";
+		}
+
 	}
 
 	spotify.search({ type: 'track', query: song }, function(err, data) {
@@ -82,69 +94,101 @@ function spotify() {
         console.log("Song Name: " + data.tracks.items[0].name);
         console.log("Preview URL: " + data.tracks.items[0].preview_url);
         console.log("Album Name: " + data.tracks.items[0].album.name);
+	
+
+		var text = "Artist: " + data.tracks.items[0].artists[0].name + "\n" +
+			       "Song Name: " + data.tracks.items[0].name + "\n" +
+			       "Preview URL: " + data.tracks.items[0].preview_url + "\n" +
+			       "Album Name: " + data.tracks.items[0].album.name + "\n" +
+			       "===========================================" + "\n";
+
+		// Write text to a file
+		writeToText(text);
+
 	})
-
-
 }
 
 // Function for movies
-function movie() {
+function movie(movie) {
 
 	// Require request
 	var request = require('request');
 
-	var url = "http://www.omdbapi.com/?t=" + index3 + "&y=&plot=short&tomatoes=true&r=json";
+	if (movie === undefined || move === null) {
+
+		// Get the movie title from the command line
+		var movie = process.argv[3];
+
+		// If the movie is null the default is "Mr. Nobody"
+		if (movie === undefined || movie === null) {
+			movie = "Mr. Nobody";
+		}
+
+	}
+
+	var url = "http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&tomatoes=true&r=json";
 
 	request(url, function (error, response, body) {
-		body = JSON.parse(body);
-		// console.log(body);
-		console.log(body.Title);
-		console.log(body.Year);
-		console.log(body.imdbRating);
-		console.log(body.Country);
-		console.log(body.Language);
-		console.log(body.Plot);
-		console.log(body.Actors);
-		console.log(body.tomatoUserRating);
-        console.log(body.tomatoURL);
+		if (!error && response.statusCode == 200) {
+			body = JSON.parse(body);
+			console.log("Title: " + body.Title);
+			console.log("Year: " +body.Year);
+			console.log("IMDB Rating: " +body.imdbRating);
+			console.log("Country: " +body.Country);
+			console.log("Language: " +body.Language);
+			console.log("Plot: " +body.Plot);
+			console.log("Actors: " +body.Actors);
+			console.log("Tomato User Rating: " +body.tomatoUserRating);
+	        console.log("Tomato URL: " +body.tomatoURL);
 
+	        var text = "Title: " + body.Title + "\n" +
+			       	   "Year: " +body.Year + "\n" +
+			           "IMDB Rating: " +body.imdbRating + "\n" +
+			           "Country: " +body.Country + "\n" +
+			           "Language: " +body.Language + "\n" +
+			           "Plot: " +body.Plot + "\n" +
+			           "Actors: " +body.Actors + "\n" +
+			           "Tomato User Rating: " +body.tomatoUserRating + "\n" +
+			           "Tomato URL: " +body.tomatoURL + "\n" +
+			           "===========================================" + "\n";
+
+			// Write text to a file
+			writeToText(text);
+		}
 	})
+
+
 }
 
-// // Function for Spotify
-// function spotify() {
+// Function for do-what-it-says
+function doWhatItSays() { 
 
-// 	// require spotify
-// 	var spotify = require('spotify');
+	fs.readFile('random.txt', 'utf8', function (err,data) {
+		if (err) {
+	    	return console.log(err);
+	 	} else {
+		  	//Split the string with the seperator as a comma
+		  	var strSplit = data.split(",");
+		  	console.log(strSplit[0]);
+		  	console.log(strSplit[1]);
 
-// 	var song = "";
+		  	switch(strSplit[0])	{
+		  		case "spotify-this-song":
+		  			spotify(strSplit[1]);
+		  			break;
+		  		case "movie-this":
+		  			movie(strSplit[1]);
+		  			break;
+		  	}
+		}
+	});
+}
 
-// 	fs.readFile('random.txt', 'utf8', function (err,data) {
-// 	  if (err) {
-// 	    return console.log(err);
-// 	  } else {
-// 	  	//Split the string with the seperator as a comma
-// 	  	var strSplit = data.split(",");
-
-// 		// The song string is the 1st index of the array after spliting it.
-// 	  	// Remove the quotes from the beginning and end of the song string.
-// 	  	song = strSplit[1].replace(/['"]+/g, '')
-// 	  	console.log("song: "+song);	
-
-// 		spotify.search({ type: 'track', query: song }, function(err, data) {
-// 	    	if (err) {
-// 	        	console.log('Error occurred: ' + err);
-// 	        	return;
-// 	    	}
-// 	    	console.log(data);
-// 	    	// console.log(JSON.stringify(data, null, 2));
-// 	    	console.log(data.tracks.items[0].artists[0].name)
-// 	        console.log(data.tracks.items[0].name);
-// 	        console.log(data.tracks.items[0].preview_url);
-// 	        console.log(data.tracks.items[0].album.name);
-// 		})
-
-// 	  }	
-// 	});
-// }
+// Function to write to a text file.
+function writeToText(text){
+	fs.appendFile('log.txt', text, function (err) {
+		if (err) return console.log(err);
+	 	console.log("Text written to log.txt");
+	});
+}
 
